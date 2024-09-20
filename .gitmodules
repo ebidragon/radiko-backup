@@ -1,0 +1,6 @@
+[submodule "radish"]
+	path = radish
+	url = https://github.com/uru2/radish.git
+[submodule "box-upload"]
+	path = box-upload
+	url = https://github.com/ebidragon/box-upload.git
