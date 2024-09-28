@@ -27,14 +27,14 @@ npm install
 - [folder_id](https://developer.box.com/platform/appendix/locating-values/#content-ids)
 - [api_key](https://sendgrid.kke.co.jp/docs/User_Manual_JP/Settings/api_keys.html)
 ```bash
-cd ht
+cd radiko-backup/ht
 cp .env.example .env
 ```
 1. Copy `user_id` to [.env](ht/.env) `USER_ID`
 2. Copy `folder_id` to [.env](ht/.env) `FOLDER_ID`
 3. Copy `api_key` to [.env](ht/.env) `MAIL_API_KEY`
-4. Copy `to email address` to [.env](ht/.env) `MAIL_TO`
-5. Copy `from email address` to [.env](ht/.env) `MAIL_FROM`
+4. Enter `to email address` to [.env](ht/.env) `MAIL_TO`
+5. Enter `from email address` to [.env](ht/.env) `MAIL_FROM`
 ### cron
 ```
 0 0 * * 5 /home/username/radiko-backup/ht/rec.sh
