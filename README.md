@@ -16,12 +16,17 @@ git clone --recursive https://github.com/ebidragon/radiko-backup.git
 cd radiko-backup/box-upload
 npm install
 ```
+### update
+```bash
+cd radiko-backup
+git submodule update
+git pull
+```
 
 ## Configuration
 ### [box-upload](https://github.com/ebidragon/box-upload/blob/main/README.md#Configuration)
 1. [.env](https://github.com/ebidragon/box-upload/blob/main/README.md#env)
 2. [token](https://github.com/ebidragon/box-upload/blob/main/README.md#token-user_idjson)
-
 ### .env
 - [user_id](https://developer.box.com/platform/appendix/locating-values/#user-ids)
 - [folder_id](https://developer.box.com/platform/appendix/locating-values/#content-ids)
