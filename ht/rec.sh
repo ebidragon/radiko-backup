@@ -61,6 +61,12 @@ else
 fi
 CONTENT="${CONTENT} (`date -d "@${START}" '+%Y-%m-%dT%H:%M:%S%:z'`/`date -d "@${END}" '+%Y-%m-%dT%H:%M:%S%:z'`)"
 
+CONTENT="${CONTENT}\n----------  DELETE  ----------\n"
+CONTENT="${CONTENT}`find "${SCRIPT_DIR}" -maxdepth 1 \( -name '*.mp3' -or -name '*.m4a' \) -mtime +35 -printf '%f\n' | sort | sed -z 's/\n$//' | sed -z 's/\n/\\\\n/g'`"
+find "${SCRIPT_DIR}" -maxdepth 1 \( -name '*.mp3' -or -name '*.m4a' \) -mtime +35 -delete
+CONTENT="${CONTENT}\n----------   LIST   ----------\n"
+CONTENT="${CONTENT}`find "${SCRIPT_DIR}" -maxdepth 1 \( -name '*.mp3' -or -name '*.m4a' \) -printf '%f\n' | sort | sed -z 's/\n$//' | sed -z 's/\n/\\\\n/g'`"
+
 curl --request POST \
   --url 'https://api.sendgrid.com/v3/mail/send' \
   --header 'Authorization: Bearer '"${MAIL_API_KEY}" \
