@@ -19,8 +19,9 @@ npm install
 ### update
 ```bash
 cd radiko-backup
+git switch main
+git pull origin main
 git submodule update
-git pull
 ```
 
 ## Configuration
