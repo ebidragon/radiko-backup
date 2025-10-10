@@ -44,4 +44,5 @@ cp .env.example .env
 ### cron
 ```
 0 0 * * 5 /home/username/radiko-backup/ht/rec.sh
+0 3 * * 6 /home/username/radiko-backup/pandora_813/rec.sh
 ```
