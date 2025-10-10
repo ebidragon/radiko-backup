@@ -48,6 +48,10 @@ UPLOAD_EXEC=`node "${BOXAPP_PATH}" 'upload' "${USER_ID}" "${FOLDER_ID}" "${MP3_P
 if [ $? -ne 0 ]; then
   SUBJECT="[error]${TAG_ALBUM}"
   CONTENT="${CONTENT}\nFILE: エラー (${TAG_TITLE})"
+  GET_EXEC=`node "${BOXAPP_PATH}" 'get' "${USER_ID}" "${FOLDER_ID}"`
+  if [ $? -eq 0 ]; then
+    CONTENT="${CONTENT} **Box Folder ${GET_EXEC}**"
+  fi
 else
   SUBJECT="[success]${TAG_ALBUM}"
   CONTENT="${CONTENT}\nFILE: ${UPLOAD_EXEC}"
