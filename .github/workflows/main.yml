@@ -9,11 +9,17 @@ jobs:
     steps:
     - name: Deploy Base Environment
       uses: appleboy/ssh-action@v1.2.0
+      env:
+        BOX_ACCESS_TOKEN: ${{ fromJSON(secrets.BOX_TOKEN_INFO_JSON).accessToken }}
+        BOX_REFRESH_TOKEN: ${{ fromJSON(secrets.BOX_TOKEN_INFO_JSON).refreshToken }}
+        BOX_ACCESS_TOKEN_TTL_MS: ${{ fromJSON(secrets.BOX_TOKEN_INFO_JSON).accessTokenTTLMS }}
+        BOX_ACQUIRED_AT_MS: ${{ fromJSON(secrets.BOX_TOKEN_INFO_JSON).acquiredAtMS }}
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT }}
+        envs: BOX_ACCESS_TOKEN,BOX_REFRESH_TOKEN,BOX_ACCESS_TOKEN_TTL_MS,BOX_ACQUIRED_AT_MS
         script: |
           mkdir -p '${{ secrets.DEPLOY_PATH }}'
           cd '${{ secrets.DEPLOY_PATH }}'
@@ -28,6 +34,34 @@ jobs:
           fi
 
           cd box-upload
+          if [ ! -f '.env' ]; then
+            echo '.env file not found. Creating from example...'
+            cp .env.example .env
+            sed -i \
+              -e "s/'CLIENT_ID'/'${{ secrets.BOX_CLIENT_ID }}'/" \
+              -e "s/'CLIENT_SECRET'/'${{ secrets.BOX_CLIENT_SECRET }}'/" \
+              .env
+          fi
+          TOKEN_JSON='token/${{ secrets.BOX_USER_ID }}.json'
+          if [ ! -f "${TOKEN_JSON}" ]; then
+            echo 'Token JSON not found. Creating from example...'
+            UPDATE_FLAG=1
+          else
+            EXISTING_MS=`awk '/"acquiredAtMS"/ { sub(/.*: */, ""); sub(/,$/, ""); print }'`
+            if [ -z "${EXISTING_MS}" ] || [ "${EXISTING_MS}" -lt "${BOX_ACQUIRED_AT_MS}" ]; then
+              echo 'Token JSON is missing or outdated. Creating from example...'
+              UPDATE_FLAG=1
+            fi
+          fi
+          if [ -n "${UPDATE_FLAG}" ]; then
+            cp token/user_id.json.example "${TOKEN_JSON}"
+            sed -i \
+              -e "s/\"ACCESS_TOKEN\"/\"${BOX_ACCESS_TOKEN}\"/" \
+              -e "s/\"REFRESH_TOKEN\"/\"${BOX_REFRESH_TOKEN}\"/" \
+              -e "s/3600000/${BOX_ACCESS_TOKEN_TTL_MS}/" \
+              -e "s/1714489200000/${BOX_ACQUIRED_AT_MS}/" \
+              "${TOKEN_JSON}"
+          fi
           npm install
           cd ..
 
@@ -71,3 +105,37 @@ jobs:
             echo 'Crontab is already up-to-date.'
           fi
           rm "${CUR_CRON}" "${NEW_CRON}"
+  setup_matrix_configs:
+    runs-on: ubuntu-latest
+    needs: deploy
+    strategy:
+      matrix:
+        target: [ht, pandora_813]
+    steps:
+    - name: Configure Target (${{ matrix.target }})
+      uses: appleboy/ssh-action@v1.2.0
+      env:
+        TARGET_USER_ID: ${{ fromJSON(secrets.RADIKO_DIR_ENV_JSON)[matrix.target].USER_ID }}
+        TARGET_FOLDER_ID: ${{ fromJSON(secrets.RADIKO_DIR_ENV_JSON)[matrix.target].FOLDER_ID }}
+        TARGET_MAIL_API_KEY: ${{ fromJSON(secrets.RADIKO_DIR_ENV_JSON)[matrix.target].MAIL_API_KEY }}
+        TARGET_MAIL_TO: ${{ fromJSON(secrets.RADIKO_DIR_ENV_JSON)[matrix.target].MAIL_TO }}
+        TARGET_MAIL_FROM: ${{ fromJSON(secrets.RADIKO_DIR_ENV_JSON)[matrix.target].MAIL_FROM }}
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        envs: TARGET_USER_ID,TARGET_FOLDER_ID,TARGET_MAIL_API_KEY,TARGET_MAIL_TO,TARGET_MAIL_FROM
+        script: |
+          cd '${{ secrets.DEPLOY_PATH }}/${{ matrix.target }}'
+          if [ ! -f '.env' ]; then
+            echo '${{ matrix.target }}/.env file not found. Creating from example...'
+            cp .env.example .env
+            sed -i \
+              -e "s/'USER_ID'/'${TARGET_USER_ID}'/" \
+              -e "s/'FOLDER_ID'/'${TARGET_FOLDER_ID}'/" \
+              -e "s/'MAIL_API_KEY'/'${TARGET_MAIL_API_KEY}'/" \
+              -e "s/'MAIL_TO'/'${TARGET_MAIL_TO}'/" \
+              -e "s/'MAIL_FROM'/'${TARGET_MAIL_FROM}'/" \
+              .env
+          fi
