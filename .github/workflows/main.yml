@@ -7,7 +7,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: executing remote ssh commands using ssh key
+    - name: Deploy Base Environment
       uses: appleboy/ssh-action@v1.2.0
       with:
         host: ${{ secrets.SSH_HOST }}
@@ -15,7 +15,59 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script: |
-          cd ${{ secrets.DEPLOY_PATH }}
-          git switch main
-          git pull origin main
-          git submodule update
+          mkdir -p '${{ secrets.DEPLOY_PATH }}'
+          cd '${{ secrets.DEPLOY_PATH }}'
+          if [ -d '.git' ]; then
+            echo 'Repository exists. Pulling updates...'
+            git switch main
+            git pull origin main
+            git submodule update
+          else
+            echo 'Repository not found. Cloning...'
+            git clone --recursive https://github.com/ebidragon/radiko-backup.git .
+          fi
+
+          cd box-upload
+          npm install
+          cd ..
+
+          REPO_CRON_FILE='cron.txt'
+          BEFORE_STR='/home/username/radiko-backup'
+          AFTER_STR='${{ secrets.DEPLOY_PATH }}'
+          CUR_CRON=`mktemp`
+          NEW_CRON=`mktemp`
+          crontab -l > "${CUR_CRON}" 2>/dev/null
+          cp "${CUR_CRON}" "${NEW_CRON}"
+          if [[ ! -f "${REPO_CRON_FILE}" ]]; then
+            echo "Error: ${REPO_CRON_FILE} not found."
+            rm "${CUR_CRON}" "${NEW_CRON}"
+            exit 1
+          fi
+          while IFS= read -r LINE || [[ -n "${LINE}" ]]
+          do
+            if [[ -z "${LINE}" ]]; then
+              continue
+            fi
+            if [[ "${LINE}" =~ ^[[:space:]]*# ]]; then
+              TGT_LINE=`echo "${LINE}" | sed -E 's/^[ \t]*#[ \t]*//'`
+              if [[ -n "${TGT_LINE}" ]]; then
+                grep -Fxv "${TGT_LINE//$BEFORE_STR/$AFTER_STR}" "${NEW_CRON}" > "${NEW_CRON}.tmp"
+                mv "${NEW_CRON}.tmp" "${NEW_CRON}"
+              fi
+            else
+              TGT_LINE="${LINE}"
+              if ! grep -Fxq "${TGT_LINE//$BEFORE_STR/$AFTER_STR}" "${NEW_CRON}"; then
+                echo "${TGT_LINE//$BEFORE_STR/$AFTER_STR}" >> "${NEW_CRON}"
+              fi
+            fi
+          done < "${REPO_CRON_FILE}"
+          if ! cmp -s "${CUR_CRON}" "${NEW_CRON}"; then
+            crontab "${NEW_CRON}"
+            CRON_OUTPUT=`crontab -l 2>/dev/null`
+            echo '=== Updated crontab content (masked) ==='
+            echo "${CRON_OUTPUT//$AFTER_STR/**********}"
+            echo '========================================'
+          else
+            echo 'Crontab is already up-to-date.'
+          fi
+          rm "${CUR_CRON}" "${NEW_CRON}"
