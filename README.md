@@ -25,9 +25,9 @@ git submodule update
 ```
 
 ## Configuration
-### [box-upload](https://github.com/ebidragon/box-upload/blob/main/README.md#Configuration)
-1. [.env](https://github.com/ebidragon/box-upload/blob/main/README.md#env)
-2. [token](https://github.com/ebidragon/box-upload/blob/main/README.md#token-user_idjson)
+### [box-upload](https://github.com/ebidragon/box-upload?tab=readme-ov-file#configuration)
+1. [.env](https://github.com/ebidragon/box-upload?tab=readme-ov-file#env)
+2. [token](https://github.com/ebidragon/box-upload?tab=readme-ov-file#token-user_idjson)
 ### .env
 - [user_id](https://developer.box.com/platform/appendix/locating-values/#user-ids)
 - [folder_id](https://developer.box.com/platform/appendix/locating-values/#content-ids)
