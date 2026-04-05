@@ -47,7 +47,7 @@ jobs:
             echo 'Token JSON not found. Creating from example...'
             UPDATE_FLAG=1
           else
-            EXISTING_MS=`awk '/"acquiredAtMS"/ { sub(/.*: */, ""); sub(/,$/, ""); print }'`
+            EXISTING_MS=`awk '/"acquiredAtMS"/ { sub(/.*: */, ""); sub(/,$/, ""); print }' "${TOKEN_JSON}"`
             if [ -z "${EXISTING_MS}" ] || [ "${EXISTING_MS}" -lt "${BOX_ACQUIRED_AT_MS}" ]; then
               echo 'Token JSON is missing or outdated. Creating from example...'
               UPDATE_FLAG=1
