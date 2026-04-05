@@ -1,2 +1,3 @@
-0 0 * * 5 /home/username/radiko-backup/ht/rec.sh
+#0 0 * * 5 /home/username/radiko-backup/ht/rec.sh
 0 3 * * 6 /home/username/radiko-backup/pandora_813/rec.sh
+30 22 * * 0 /home/username/radiko-backup/humbert2/rec.sh

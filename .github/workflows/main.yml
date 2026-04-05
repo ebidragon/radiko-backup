@@ -110,7 +110,7 @@ jobs:
     needs: deploy
     strategy:
       matrix:
-        target: [ht, pandora_813]
+        target: [ht, pandora_813, humbert2]
     steps:
     - name: Configure Target (${{ matrix.target }})
       uses: appleboy/ssh-action@v1.2.0
